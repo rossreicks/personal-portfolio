@@ -69,7 +69,7 @@ async function getData() {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",
-			Authorization: `Bearer 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`,
+			Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
 		},
 		body: data,
 	});
