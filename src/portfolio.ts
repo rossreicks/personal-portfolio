@@ -71,11 +71,11 @@ const workExperiences = {
 	viewExperiences: true, //Set it to true to show workExperiences Section
 	experience: [
 		{
-			role: "Software Engineer",
+			role: "Senior Software Engineer",
 			company: "Tractor Zoom",
 			companylogo: "/images/tz.png",
 			companyColor: "darkgrey",
-			date: "March 2021 – Present",
+			date: "March 2021 - Present",
 			desc: "Championed data platform, led compliance, and drove product enhancements at an industry innovator.",
 			descBullets: [
 				"Architected robust data ingestion platform for accuracy",
@@ -88,7 +88,7 @@ const workExperiences = {
 			company: "John Deere",
 			companylogo: "/images/John-Deere-Green.png",
 			companyColor: "#367C2B",
-			date: "December 2019 – March 2021",
+			date: "December 2019 - March 2021",
 			desc: "Led microservices transition, serverless solutions, and cross-team collaboration at a leading manufacturer.",
 			descBullets: [
 				"Orchestrated Kubernetes migration for scalable applications",
@@ -101,7 +101,7 @@ const workExperiences = {
 			company: "John Deere",
 			companylogo: "/images/John-Deere-Logo.png",
 			companyColor: "#FFCB05",
-			date: "May 2018 – December 2019",
+			date: "May 2018 - December 2019",
 			desc: "Modernized software, mentored analysts, and optimized productivity at a global equipment company.",
 			descBullets: [
 				"Revitalized WinForms app with REST-based architecture",

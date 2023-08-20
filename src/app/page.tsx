@@ -9,9 +9,15 @@ import Certifications from "../containers/certifications/Certifications";
 import Profile from "../containers/profile/Profile";
 import Footer from "../components/footer/Footer";
 import Top from "../containers/topbutton/Top";
+import Family from "@/containers/family/Family";
+import Hobbies from "@/containers/achievements/Achievements";
+import Achievements from "@/containers/achievements/Achievements";
+import { Get_Github_User } from "@/queries/github-user";
+import { GraphQLClient } from "graphql-request";
+import { GetGithubUserQuery, getSdk } from "@/gql/client";
 
 async function App() {
-	const { data } = await getData();
+	const data = await getData();
 
 	return (
 		<div>
@@ -19,8 +25,16 @@ async function App() {
 			<Greeting />
 			<Skills />
 			<WorkExperience />
-			<Projects />
+			<Projects
+				repos={data.user.pinnedItems.edges}
+				contributions={
+					data.user.contributionsCollection.contributionCalendar
+				}
+			/>
+			{/* <Family />
+			<Achievements /> */}
 			<Certifications />
+			{/* <Hobbies /> */}
 			<Profile prof={data.user} />
 			<Footer />
 			<Top />
@@ -29,52 +43,15 @@ async function App() {
 }
 
 async function getData() {
-	const data = JSON.stringify({
-		query: `
-       {
-         user(login:"rossreicks") {
-           name
-           bio
-           isHireable
-           avatarUrl
-           location
-           pinnedItems(first: 6, types: [REPOSITORY]) {
-             totalCount
-             edges {
-                 node {
-                   ... on Repository {
-                     name
-                     description
-                     forkCount
-                     stargazers {
-                       totalCount
-                     }
-                     url
-                     id
-                     diskUsage
-                     primaryLanguage {
-                       name
-                       color
-                     }
-                   }
-                 }
-               }
-             }
-           }
-       }
-       `,
-	});
-
-	const res = await fetch("https://api.github.com/graphql", {
-		method: "POST",
+	const client = new GraphQLClient("https://api.github.com/graphql", {
 		headers: {
-			"Content-Type": "application/json",
 			Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
 		},
-		body: data,
 	});
 
-	return res.json();
+	const sdk = getSdk(client);
+
+	return await sdk.GetGithubUser({ username: "rossreicks" });
 }
 
 export default App;

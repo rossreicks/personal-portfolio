@@ -1,64 +1,73 @@
 "use client";
-import React, { useState, useEffect, lazy, Suspense } from "react";
+import React from "react";
 import "./Project.css";
 import Button from "../../components/button/Button";
-import Loading from "../loading/Loading";
 import { socialMediaLinks } from "../../portfolio";
+import GithubRepoCard from "../../components/githubRepoCard/GithubRepoCard";
+import Calendar from "react-github-contribution-calendar";
+import { GetGithubUserQuery } from "@/gql/client";
 
-export default function Projects() {
-	const GithubRepoCard = lazy(
-		() => import("../../components/githubRepoCard/GithubRepoCard")
+const formatNumberWithCommas = (num: number) =>
+	num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+export default function Projects({
+	repos,
+	contributions,
+}: {
+	// repos: GetGithubUserQuery["user"]["pinnedItems"]["edges"];
+	repos: any;
+	contributions: GetGithubUserQuery["user"]["contributionsCollection"]["contributionCalendar"];
+}) {
+	const values: { [date: string]: number } = contributions.weeks.reduce(
+		(acc, week) => {
+			week.contributionDays.forEach((day) => {
+				acc[day.date] = day.contributionCount;
+			});
+			return acc;
+		},
+		{} as { [date: string]: number }
 	);
-	const FailedLoading = () => null;
-	const renderLoader = () => <Loading />;
-	const [repo, setrepo] = useState([]);
 
-	useEffect(() => {
-		const getRepoData = () => {
-			fetch("/profile.json")
-				.then((result) => {
-					if (result.ok) {
-						return result.json();
-					}
-					throw result;
-				})
-				.then((response) => {
-					setrepoFunction(response.data.user.pinnedItems.edges);
-				})
-				.catch(function (error) {
-					console.log(error);
-					setrepoFunction("Error");
-					console.log(
-						"Because of this Error, nothing is shown in place of Projects section. Projects section not configured"
-					);
-				});
-		};
-		getRepoData();
-	}, []);
+	const lastDate: string = new Date().toDateString();
+	const panelColors = ["#EEEEEE", "#D6E685", "#8CC665", "#44A340", "#1E6823"];
 
-	function setrepoFunction(array) {
-		setrepo(array);
-	}
-	if (!(typeof repo === "string" || repo instanceof String)) {
-		return (
-			<Suspense fallback={renderLoader()}>
-				<div className="main" id="opensource">
-					<h1 className="project-title">Projects</h1>
-					<div className="repo-cards-div-main">
-						{repo.map((v, i) => {
-							return <GithubRepoCard repo={v} key={v.node.id} />;
-						})}
-					</div>
-					<Button
-						text={"More Projects"}
-						className="project-button"
-						href={socialMediaLinks.github}
-						newTab={true}
+	return (
+		<div className="main" id="opensource">
+			<h1 className="project-title">Projects</h1>
+			<div className="container">
+				<div className="repo-cards-div-main">
+					{repos.map((repo, i) => {
+						return (
+							<GithubRepoCard
+								repo={repo}
+								key={repo.node.id as string}
+							/>
+						);
+					})}
+				</div>
+				<div className="github-calendar">
+					<p>
+						{formatNumberWithCommas(
+							contributions.totalContributions
+						) + " "}
+						contributions in the last year
+					</p>
+					<Calendar
+						values={values}
+						until={lastDate}
+						weekLabelAttributes={undefined}
+						panelAttributes={undefined}
+						monthLabelAttributes={undefined}
+						panelColors={panelColors}
 					/>
 				</div>
-			</Suspense>
-		);
-	} else {
-		return <FailedLoading />;
-	}
+			</div>
+			<Button
+				text={"More Projects"}
+				className="project-button"
+				href={socialMediaLinks.github}
+				newTab={true}
+			/>
+		</div>
+	);
 }

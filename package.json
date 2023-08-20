@@ -1,26 +1,39 @@
 {
-  "name": "next-app",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
-  },
-  "dependencies": {
-    "@types/node": "20.5.1",
-    "@types/react": "18.2.20",
-    "@types/react-dom": "18.2.7",
-    "colorthief": "^2.4.0",
-    "eslint": "8.47.0",
-    "eslint-config-next": "13.4.19",
-    "next": "13.4.19",
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
-    "react-easy-emoji": "^1.8.1",
-    "react-headroom": "^3.2.1",
-    "react-reveal": "^1.2.2",
-    "typescript": "5.1.6"
-  }
+	"name": "next-app",
+	"version": "0.1.0",
+	"private": true,
+	"scripts": {
+		"dev": "next dev",
+		"build": "next build",
+		"start": "next start",
+		"lint": "next lint",
+		"gql-reload": "graphql-codegen --config gql-codegen.ts"
+	},
+	"dependencies": {
+		"@types/node": "20.5.1",
+		"@types/react": "18.2.20",
+		"@types/react-dom": "18.2.7",
+		"colorthief": "^2.4.0",
+		"eslint": "8.47.0",
+		"eslint-config-next": "13.4.19",
+		"graphql": "^16.8.0",
+		"graphql-request": "^6.1.0",
+		"graphql-tag": "^2.12.6",
+		"next": "13.4.19",
+		"react": "18.2.0",
+		"react-dom": "18.2.0",
+		"react-easy-emoji": "^1.8.1",
+		"react-github-contribution-calendar": "^2.2.0",
+		"react-headroom": "^3.2.1",
+		"react-reveal": "^1.2.2",
+		"typescript": "5.1.6"
+	},
+	"devDependencies": {
+		"@graphql-codegen/cli": "5.0.0",
+		"@graphql-codegen/client-preset": "4.1.0",
+		"@graphql-codegen/typescript": "^4.0.1",
+		"@graphql-codegen/typescript-graphql-request": "^5.0.0",
+		"@graphql-codegen/typescript-resolvers": "^4.0.1",
+		"encoding": "^0.1.13"
+	}
 }
