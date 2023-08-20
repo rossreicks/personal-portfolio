@@ -7,6 +7,8 @@ import emoji from "react-easy-emoji";
 import { Fade } from "react-reveal";
 
 export default function GithubProfileCard({ prof }) {
+	if (!prof) return null;
+
 	return (
 		<Fade bottom duration={1000} distance="20px">
 			<div className="main" id="contact">
