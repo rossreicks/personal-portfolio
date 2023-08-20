@@ -4,7 +4,11 @@ import "./ExperienceCard.css";
 export default function ExperienceCard({ cardInfo }) {
 	const GetDescBullets = ({ descBullets }) => {
 		return descBullets
-			? descBullets.map((item) => <li className="subTitle">{item}</li>)
+			? descBullets.map((item, i) => (
+					<li key={i} className="subTitle">
+						{item}
+					</li>
+			  ))
 			: null;
 	};
 

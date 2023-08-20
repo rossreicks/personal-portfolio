@@ -13,7 +13,12 @@ export default function Certifications() {
 				<div className="cert-main-div">
 					<div className="cert-text-div">
 						{certifications.certifications.map((cert) => {
-							return <CertificationCard certificate={cert} />;
+							return (
+								<CertificationCard
+									key={cert.alt_name}
+									certificate={cert}
+								/>
+							);
 						})}
 					</div>
 				</div>

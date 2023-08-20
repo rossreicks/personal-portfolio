@@ -17,6 +17,7 @@ export default function WorkExperience() {
 								{workExperiences.experience.map((card) => {
 									return (
 										<ExperienceCard
+											key={card.companylogo}
 											cardInfo={{
 												company: card.company,
 												desc: card.desc,

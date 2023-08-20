@@ -11,7 +11,7 @@ export default function SoftwareSkill() {
 						return (
 							<li
 								className="software-skill-inline"
-								//name={skills.skillName}
+								key={skills.skillName}
 							>
 								<span
 									className="iconify"
