@@ -24,19 +24,19 @@ const socialMediaLinks = {
 
 const skillsSection = {
 	title: "What i do",
-	subTitle: "CREATING SOFTWARE SOLUTIONS TO SAVE PEOPLE TIME AND MONEY.",
+	subTitle: "CREATING SOFTWARE SOLUTIONS TO SAVE YOU TIME AND MONEY.",
 	skills: [
 		emoji(
-			"⚡ Architecting and developing highly scalable and performant applications"
+			"⚡ Architecting and developing exceptionally scalable and efficient applications"
 		),
 		emoji(
-			"⚡ Developing highly interactive Frontend / User Interfaces for your web and mobile applications"
+			"⚡ Creating supremely engaging Frontend / User Interfaces for your web and mobile applications"
 		),
 		emoji(
-			"⚡ Deploying highly available and secure applications on the cloud"
+			"⚡ Deploying highly available and secure applications to the cloud"
 		),
 		emoji(
-			"⚡ Bring a product from idea to production using the latest technologies"
+			"⚡ Transforming a product from idea to production using the latest technologies"
 		),
 	],
 
