@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XSD Schema Viewer</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #1a1a2e;
+    --bg-surface: #16213e;
+    --bg-card: #1c2a4a;
+    --bg-hover: #253557;
+    --bg-input: #0f1629;
+    --border: #2a3a5c;
+    --border-focus: #4a6fa5;
+    --text: #e0e6f0;
+    --text-dim: #8892a8;
+    --text-bright: #ffffff;
+    --accent: #4fc3f7;
+    --accent-dim: #2a7fa8;
+    --type-color: #ce93d8;
+    --element-color: #81c784;
+    --attr-color: #ffb74d;
+    --enum-color: #f06292;
+    --doc-color: #90a4ae;
+    --restriction-color: #ffd54f;
+    --scrollbar-track: #0f1629;
+    --scrollbar-thumb: #2a3a5c;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* Layout */
+  .app {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    grid-template-rows: auto 1fr;
+    height: 100vh;
+  }
+
+  .header {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 20px;
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .header h1 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-bright);
+    white-space: nowrap;
+  }
+
+  .header .file-info {
+    font-size: 13px;
+    color: var(--text-dim);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .header .stats {
+    margin-left: auto;
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+
+  .header .stats .stat-val { color: var(--accent); font-weight: 600; }
+
+  /* Upload overlay */
+  .upload-overlay {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 40px;
+  }
+
+  .upload-overlay.hidden { display: none; }
+
+  .drop-zone {
+    width: 500px;
+    max-width: 90vw;
+    padding: 60px 40px;
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .drop-zone:hover, .drop-zone.dragover {
+    border-color: var(--accent);
+    background: rgba(79, 195, 247, 0.05);
+  }
+
+  .drop-zone .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.6; }
+  .drop-zone h2 { font-size: 18px; font-weight: 600; color: var(--text-bright); margin-bottom: 8px; }
+  .drop-zone p { font-size: 14px; color: var(--text-dim); }
+
+  .drop-zone input[type="file"] { display: none; }
+
+  /* Sidebar tree */
+  .sidebar {
+    background: var(--bg-surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .sidebar.hidden, .detail.hidden { display: none; }
+
+  .search-box {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .search-box input {
+    width: 100%;
+    padding: 8px 12px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 13px;
+    outline: none;
+  }
+
+  .search-box input:focus { border-color: var(--border-focus); }
+  .search-box input::placeholder { color: var(--text-dim); }
+
+  .tree-filters {
+    display: flex;
+    gap: 4px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+
+  .filter-chip {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    transition: all 0.15s;
+  }
+
+  .filter-chip.active { border-color: var(--accent); color: var(--accent); background: rgba(79, 195, 247, 0.1); }
+  .filter-chip:hover { border-color: var(--text-dim); }
+
+  .tree-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+  }
+
+  .tree-container::-webkit-scrollbar { width: 6px; }
+  .tree-container::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+  .tree-container::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+
+  .tree-node {
+    display: flex;
+    align-items: center;
+    padding: 5px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.1s;
+    white-space: nowrap;
+    user-select: none;
+  }
+
+  .tree-node:hover { background: var(--bg-hover); }
+  .tree-node.selected { background: var(--bg-card); border-right: 2px solid var(--accent); }
+
+  .tree-node .indent { flex-shrink: 0; }
+  .tree-node .toggle {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+    transition: transform 0.15s;
+  }
+
+  .tree-node .toggle.expanded { transform: rotate(90deg); }
+  .tree-node .toggle.leaf { visibility: hidden; }
+
+  .tree-node .badge {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    margin-right: 6px;
+    flex-shrink: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .badge-element { background: rgba(129, 199, 132, 0.15); color: var(--element-color); }
+  .badge-type { background: rgba(206, 147, 216, 0.15); color: var(--type-color); }
+  .badge-group { background: rgba(79, 195, 247, 0.15); color: var(--accent); }
+  .badge-attr { background: rgba(255, 183, 77, 0.15); color: var(--attr-color); }
+  .badge-enum { background: rgba(240, 98, 146, 0.15); color: var(--enum-color); }
+
+  .tree-node .name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text);
+  }
+
+  .tree-node .type-ref {
+    margin-left: 6px;
+    font-size: 11px;
+    color: var(--text-dim);
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Detail panel */
+  .detail {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .detail-empty {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dim);
+    font-size: 14px;
+  }
+
+  .detail-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+  }
+
+  .detail-content::-webkit-scrollbar { width: 6px; }
+  .detail-content::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+  .detail-content::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+
+  .detail-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .detail-header h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-bright);
+  }
+
+  .detail-header .kind {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .section {
+    margin-bottom: 24px;
+  }
+
+  .section h3 {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .doc-text {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--doc-color);
+    background: var(--bg-card);
+    padding: 12px 16px;
+    border-radius: 6px;
+    border-left: 3px solid var(--accent-dim);
+    white-space: pre-wrap;
+  }
+
+  .props-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .props-table th {
+    text-align: left;
+    padding: 6px 12px;
+    font-weight: 600;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .props-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(42, 58, 92, 0.5);
+    vertical-align: top;
+  }
+
+  .props-table tr:hover { background: var(--bg-hover); }
+
+  .props-table .name-col { color: var(--text-bright); font-weight: 500; font-family: 'SF Mono', 'Fira Code', monospace; }
+  .props-table .type-col { color: var(--type-color); font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; }
+  .props-table .req-col { font-size: 11px; }
+  .props-table .req-yes { color: var(--enum-color); font-weight: 600; }
+  .props-table .req-no { color: var(--text-dim); }
+  .props-table .doc-col { color: var(--text-dim); font-size: 12px; max-width: 300px; }
+
+  .type-link {
+    color: var(--type-color);
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: 2px;
+  }
+
+  .type-link:hover { text-decoration-style: solid; }
+
+  .enum-values {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .enum-val {
+    padding: 3px 10px;
+    background: rgba(240, 98, 146, 0.1);
+    border: 1px solid rgba(240, 98, 146, 0.25);
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    color: var(--enum-color);
+  }
+
+  .restriction-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .restriction-item {
+    padding: 4px 12px;
+    background: rgba(255, 213, 79, 0.08);
+    border: 1px solid rgba(255, 213, 79, 0.2);
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--restriction-color);
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+
+  .restriction-item .label { color: var(--text-dim); font-family: -apple-system, system-ui, sans-serif; margin-right: 4px; }
+
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 16px;
+    font-size: 12px;
+    flex-wrap: wrap;
+  }
+
+  .breadcrumb span { color: var(--text-dim); cursor: pointer; }
+  .breadcrumb span:hover { color: var(--accent); }
+  .breadcrumb .sep { color: var(--text-dim); cursor: default; opacity: 0.5; }
+  .breadcrumb .current { color: var(--text); cursor: default; }
+
+  .child-elements {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .child-el {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: var(--bg-card);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.1s;
+    font-size: 13px;
+  }
+
+  .child-el:hover { background: var(--bg-hover); }
+  .child-el .occ { font-size: 11px; color: var(--text-dim); margin-left: auto; font-family: 'SF Mono', 'Fira Code', monospace; }
+
+  /* Prompt area */
+  .prompt-bar {
+    border-top: 1px solid var(--border);
+    padding: 10px 20px;
+    background: var(--bg-surface);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    grid-column: 1 / -1;
+  }
+
+  .prompt-bar.hidden { display: none; }
+
+  .prompt-text {
+    flex: 1;
+    font-size: 12px;
+    color: var(--text-dim);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+
+  .copy-btn {
+    padding: 6px 16px;
+    background: var(--accent-dim);
+    border: none;
+    border-radius: 6px;
+    color: var(--text-bright);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s;
+  }
+
+  .copy-btn:hover { background: var(--accent); color: var(--bg); }
+
+  .new-file-btn {
+    padding: 6px 14px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-dim);
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .new-file-btn:hover { border-color: var(--text-dim); color: var(--text); }
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <div class="header">
+    <h1>XSD Viewer</h1>
+    <span class="file-info" id="fileInfo"></span>
+    <div class="stats" id="stats"></div>
+  </div>
+
+  <div class="upload-overlay" id="uploadOverlay">
+    <div class="drop-zone" id="dropZone">
+      <div class="icon">&lt;/&gt;</div>
+      <h2>Drop an .xsd file here</h2>
+      <p>or click to browse</p>
+      <input type="file" id="fileInput" accept=".xsd,.xml">
+    </div>
+  </div>
+
+  <div class="sidebar hidden" id="sidebar">
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Search elements, types, attributes...">
+    </div>
+    <div class="tree-filters" id="treeFilters">
+      <button class="filter-chip active" data-filter="all">All</button>
+      <button class="filter-chip" data-filter="element">Elements</button>
+      <button class="filter-chip" data-filter="complexType">Types</button>
+      <button class="filter-chip" data-filter="simpleType">Simple</button>
+      <button class="filter-chip" data-filter="group">Groups</button>
+    </div>
+    <div class="tree-container" id="treeContainer"></div>
+  </div>
+
+  <div class="detail hidden" id="detail">
+    <div class="detail-empty" id="detailEmpty">Select an item from the tree to view details</div>
+    <div class="detail-content hidden" id="detailContent"></div>
+  </div>
+
+  <div class="prompt-bar hidden" id="promptBar">
+    <span class="prompt-text" id="promptText"></span>
+    <button class="copy-btn" id="copyBtn">Copy Prompt</button>
+    <button class="new-file-btn" id="newFileBtn">New File</button>
+  </div>
+</div>
+
+<script>
+const NS = {
+  xs: 'http://www.w3.org/2001/XMLSchema',
+  xsd: 'http://www.w3.org/2001/XMLSchema',
+};
+
+let schema = null;   // parsed schema data
+let selectedId = null;
+let expandedNodes = new Set();
+let activeFilter = 'all';
+let searchQuery = '';
+
+// ── Parse XSD ──
+
+function parseXSD(xmlDoc) {
+  const root = xmlDoc.documentElement;
+  const targetNs = root.getAttribute('targetNamespace') || '';
+  const items = [];
+  let idCounter = 0;
+
+  function nextId() { return 'n' + (idCounter++); }
+
+  function getDoc(el) {
+    const ann = el.querySelector(':scope > annotation > documentation');
+    if (ann) return ann.textContent.trim();
+    // Also check appinfo
+    const appinfo = el.querySelector(':scope > annotation > appinfo');
+    if (appinfo) return appinfo.textContent.trim();
+    return '';
+  }
+
+  function getDocNS(el) {
+    // Try namespace-aware lookup
+    for (const child of el.children) {
+      if (child.localName === 'annotation') {
+        for (const sub of child.children) {
+          if (sub.localName === 'documentation') return sub.textContent.trim();
+        }
+        for (const sub of child.children) {
+          if (sub.localName === 'appinfo') return sub.textContent.trim();
+        }
+      }
+    }
+    return '';
+  }
+
+  function stripNs(name) {
+    if (!name) return '';
+    const i = name.indexOf(':');
+    return i >= 0 ? name.substring(i + 1) : name;
+  }
+
+  function parseOccurrence(el) {
+    const min = el.getAttribute('minOccurs');
+    const max = el.getAttribute('maxOccurs');
+    if (min === null && max === null) return '';
+    const lo = min || '1';
+    const hi = max === 'unbounded' ? '*' : (max || '1');
+    if (lo === '1' && hi === '1') return '';
+    return `[${lo}..${hi}]`;
+  }
+
+  function parseAttributes(el) {
+    const attrs = [];
+    for (const child of el.children) {
+      if (child.localName === 'attribute') {
+        attrs.push({
+          name: child.getAttribute('name') || '',
+          type: stripNs(child.getAttribute('type') || ''),
+          use: child.getAttribute('use') || 'optional',
+          default: child.getAttribute('default') || '',
+          fixed: child.getAttribute('fixed') || '',
+          doc: getDocNS(child),
+        });
+      } else if (child.localName === 'attributeGroup') {
+        const ref = stripNs(child.getAttribute('ref') || '');
+        if (ref) attrs.push({ name: ref, type: '', use: 'group-ref', doc: '' });
+      }
+    }
+    return attrs;
+  }
+
+  function parseRestriction(el) {
+    const info = { base: '', enums: [], facets: [] };
+    const restriction = Array.from(el.children).find(c => c.localName === 'restriction');
+    if (!restriction) {
+      const list = Array.from(el.children).find(c => c.localName === 'list');
+      if (list) {
+        info.base = 'list of ' + stripNs(list.getAttribute('itemType') || '');
+        return info;
+      }
+      const union = Array.from(el.children).find(c => c.localName === 'union');
+      if (union) {
+        const members = (union.getAttribute('memberTypes') || '').split(/\s+/).map(stripNs).filter(Boolean);
+        info.base = 'union(' + members.join(', ') + ')';
+        return info;
+      }
+      return info;
+    }
+    info.base = stripNs(restriction.getAttribute('base') || '');
+    for (const child of restriction.children) {
+      if (child.localName === 'enumeration') {
+        const val = child.getAttribute('value') || '';
+        const doc = getDocNS(child);
+        info.enums.push({ value: val, doc });
+      } else if (['minLength', 'maxLength', 'minInclusive', 'maxInclusive',
+                   'minExclusive', 'maxExclusive', 'pattern', 'totalDigits',
+                   'fractionDigits', 'length', 'whiteSpace'].includes(child.localName)) {
+        info.facets.push({ name: child.localName, value: child.getAttribute('value') || '' });
+      }
+    }
+    return info;
+  }
+
+  function parseChildElements(parent) {
+    const children = [];
+    for (const child of parent.children) {
+      if (child.localName === 'element') {
+        const name = child.getAttribute('name') || stripNs(child.getAttribute('ref') || '');
+        const type = stripNs(child.getAttribute('type') || '');
+        children.push({
+          name,
+          type: type || (child.getAttribute('ref') ? '(ref)' : ''),
+          occ: parseOccurrence(child),
+          doc: getDocNS(child),
+          ref: child.getAttribute('ref') ? stripNs(child.getAttribute('ref')) : '',
+          isRef: !!child.getAttribute('ref'),
+        });
+        // Inline complex type
+        const inlineCT = Array.from(child.children).find(c => c.localName === 'complexType');
+        if (inlineCT && name) {
+          const inlineItem = parseComplexType(inlineCT, name + ' (inline)');
+          items.push(inlineItem);
+          const last = children[children.length - 1];
+          last.type = name + ' (inline)';
+          last.inlineTypeId = inlineItem.id;
+        }
+      } else if (child.localName === 'sequence' || child.localName === 'all' || child.localName === 'choice') {
+        const sub = parseChildElements(child);
+        sub.forEach(s => {
+          if (child.localName === 'choice') s.choice = true;
+          children.push(s);
+        });
+      } else if (child.localName === 'group') {
+        const ref = stripNs(child.getAttribute('ref') || '');
+        if (ref) {
+          children.push({ name: ref, type: '', occ: parseOccurrence(child), doc: '', ref: ref, isRef: true, isGroupRef: true });
+        } else {
+          const sub = parseChildElements(child);
+          children.push(...sub);
+        }
+      } else if (child.localName === 'any') {
+        children.push({ name: '(any)', type: 'any', occ: parseOccurrence(child), doc: child.getAttribute('namespace') || '', isAny: true });
+      }
+    }
+    return children;
+  }
+
+  function parseComplexType(el, name) {
+    const id = nextId();
+    const doc = getDocNS(el);
+    let children = [];
+    let attributes = [];
+    let base = '';
+    let mixed = el.getAttribute('mixed') === 'true';
+    let abstract = el.getAttribute('abstract') === 'true';
+
+    // Direct content
+    children = parseChildElements(el);
+    attributes = parseAttributes(el);
+
+    // Extensions & restrictions
+    for (const child of el.children) {
+      if (child.localName === 'complexContent' || child.localName === 'simpleContent') {
+        const ext = Array.from(child.children).find(c => c.localName === 'extension');
+        const restr = Array.from(child.children).find(c => c.localName === 'restriction');
+        const src = ext || restr;
+        if (src) {
+          base = stripNs(src.getAttribute('base') || '');
+          children = children.concat(parseChildElements(src));
+          attributes = attributes.concat(parseAttributes(src));
+        }
+      }
+    }
+
+    return {
+      id, name, kind: 'complexType', doc, children, attributes, base, mixed, abstract,
+    };
+  }
+
+  // Top-level elements
+  for (const el of root.children) {
+    if (el.localName === 'element') {
+      const name = el.getAttribute('name') || '';
+      const type = stripNs(el.getAttribute('type') || '');
+      const id = nextId();
+      const doc = getDocNS(el);
+      const item = { id, name, kind: 'element', type, doc, children: [], attributes: [] };
+
+      // Inline complex type
+      const ct = Array.from(el.children).find(c => c.localName === 'complexType');
+      if (ct) {
+        const parsed = parseComplexType(ct, name);
+        item.children = parsed.children;
+        item.attributes = parsed.attributes;
+        item.base = parsed.base;
+        item.mixed = parsed.mixed;
+      }
+
+      items.push(item);
+    } else if (el.localName === 'complexType') {
+      const name = el.getAttribute('name') || '';
+      items.push(parseComplexType(el, name));
+    } else if (el.localName === 'simpleType') {
+      const name = el.getAttribute('name') || '';
+      const id = nextId();
+      const doc = getDocNS(el);
+      const restriction = parseRestriction(el);
+      items.push({ id, name, kind: 'simpleType', doc, restriction });
+    } else if (el.localName === 'group') {
+      const name = el.getAttribute('name') || '';
+      const id = nextId();
+      const doc = getDocNS(el);
+      const children = parseChildElements(el);
+      items.push({ id, name, kind: 'group', doc, children, attributes: [] });
+    } else if (el.localName === 'attributeGroup') {
+      const name = el.getAttribute('name') || '';
+      const id = nextId();
+      const doc = getDocNS(el);
+      const attributes = parseAttributes(el);
+      items.push({ id, name, kind: 'attributeGroup', doc, attributes, children: [] });
+    }
+  }
+
+  return { targetNamespace: targetNs, items };
+}
+
+// ── Render Tree ──
+
+function renderTree() {
+  const container = document.getElementById('treeContainer');
+  const query = searchQuery.toLowerCase();
+
+  const filtered = schema.items.filter(item => {
+    if (activeFilter !== 'all' && item.kind !== activeFilter) return false;
+    if (query && !item.name.toLowerCase().includes(query)) {
+      // Also search in children names, doc
+      const inChildren = (item.children || []).some(c => c.name.toLowerCase().includes(query));
+      const inDoc = (item.doc || '').toLowerCase().includes(query);
+      const inEnum = (item.restriction?.enums || []).some(e => e.value.toLowerCase().includes(query));
+      if (!inChildren && !inDoc && !inEnum) return false;
+    }
+    return true;
+  });
+
+  let html = '';
+  for (const item of filtered) {
+    html += renderTreeNode(item, 0);
+  }
+
+  container.innerHTML = html || '<div style="padding:20px;text-align:center;color:var(--text-dim)">No items match</div>';
+
+  // Attach click handlers
+  container.querySelectorAll('.tree-node').forEach(node => {
+    node.addEventListener('click', (e) => {
+      const id = node.dataset.id;
+      const hasChildren = node.dataset.hasChildren === 'true';
+
+      if (hasChildren && e.target.closest('.toggle')) {
+        if (expandedNodes.has(id)) expandedNodes.delete(id);
+        else expandedNodes.add(id);
+        renderTree();
+        return;
+      }
+
+      selectedId = id;
+      renderTree();
+      renderDetail(id);
+      updatePrompt();
+    });
+  });
+}
+
+function renderTreeNode(item, depth) {
+  const isExpanded = expandedNodes.has(item.id);
+  const isSelected = selectedId === item.id;
+  const hasChildren = (item.children && item.children.length > 0) || (item.attributes && item.attributes.length > 0);
+  const badgeClass = {
+    element: 'badge-element', complexType: 'badge-type', simpleType: 'badge-type',
+    group: 'badge-group', attributeGroup: 'badge-attr',
+  }[item.kind] || 'badge-element';
+
+  const badgeLabel = {
+    element: 'EL', complexType: 'CT', simpleType: 'ST', group: 'GRP', attributeGroup: 'AG',
+  }[item.kind] || '?';
+
+  let typeRef = '';
+  if (item.kind === 'element' && item.type) typeRef = item.type;
+  else if (item.base) typeRef = 'extends ' + item.base;
+  else if (item.restriction?.base) typeRef = item.restriction.base;
+
+  let html = `<div class="tree-node${isSelected ? ' selected' : ''}" data-id="${item.id}" data-has-children="${hasChildren}">`;
+  html += `<span class="indent" style="width:${depth * 16}px"></span>`;
+  html += `<span class="toggle${hasChildren ? (isExpanded ? ' expanded' : '') : ' leaf'}">&#9654;</span>`;
+  html += `<span class="badge ${badgeClass}">${badgeLabel}</span>`;
+  html += `<span class="name">${esc(item.name)}</span>`;
+  if (typeRef) html += `<span class="type-ref">${esc(typeRef)}</span>`;
+  html += '</div>';
+
+  if (hasChildren && isExpanded) {
+    if (item.attributes) {
+      for (const attr of item.attributes) {
+        html += `<div class="tree-node" data-id="${item.id}" data-has-children="false" style="opacity:0.7">`;
+        html += `<span class="indent" style="width:${(depth + 1) * 16}px"></span>`;
+        html += `<span class="toggle leaf">&#9654;</span>`;
+        html += `<span class="badge badge-attr">@</span>`;
+        html += `<span class="name">${esc(attr.name)}</span>`;
+        if (attr.type) html += `<span class="type-ref">${esc(attr.type)}</span>`;
+        html += '</div>';
+      }
+    }
+    if (item.children) {
+      for (const child of item.children) {
+        const childItem = child.inlineTypeId
+          ? schema.items.find(i => i.id === child.inlineTypeId)
+          : null;
+        if (childItem) {
+          html += renderTreeNode(childItem, depth + 1);
+        } else {
+          html += `<div class="tree-node" data-id="${item.id}_child_${child.name}" data-has-children="false">`;
+          html += `<span class="indent" style="width:${(depth + 1) * 16}px"></span>`;
+          html += `<span class="toggle leaf">&#9654;</span>`;
+          html += `<span class="badge badge-element">EL</span>`;
+          html += `<span class="name">${esc(child.name)}</span>`;
+          if (child.type) html += `<span class="type-ref">${esc(child.type)}</span>`;
+          if (child.occ) html += `<span class="type-ref">${esc(child.occ)}</span>`;
+          html += '</div>';
+        }
+      }
+    }
+  }
+
+  return html;
+}
+
+// ── Render Detail ──
+
+function renderDetail(id) {
+  const item = schema.items.find(i => i.id === id);
+  if (!item) return;
+
+  const content = document.getElementById('detailContent');
+  const empty = document.getElementById('detailEmpty');
+  content.classList.remove('hidden');
+  empty.style.display = 'none';
+
+  const kindColor = {
+    element: 'var(--element-color)', complexType: 'var(--type-color)',
+    simpleType: 'var(--type-color)', group: 'var(--accent)', attributeGroup: 'var(--attr-color)',
+  }[item.kind];
+
+  let html = '';
+
+  // Header
+  html += '<div class="detail-header">';
+  html += `<h2>${esc(item.name)}</h2>`;
+  html += `<span class="kind" style="color:${kindColor}">${item.kind}</span>`;
+  if (item.abstract) html += '<span class="kind" style="color:var(--text-dim)">abstract</span>';
+  if (item.mixed) html += '<span class="kind" style="color:var(--text-dim)">mixed</span>';
+  html += '</div>';
+
+  // Documentation
+  if (item.doc) {
+    html += '<div class="section">';
+    html += '<h3>Documentation</h3>';
+    html += `<div class="doc-text">${esc(item.doc)}</div>`;
+    html += '</div>';
+  }
+
+  // Base type
+  if (item.base) {
+    html += '<div class="section">';
+    html += '<h3>Extends</h3>';
+    html += `<p><span class="type-link" data-type="${esc(item.base)}">${esc(item.base)}</span></p>`;
+    html += '</div>';
+  }
+
+  // Type (for elements)
+  if (item.kind === 'element' && item.type) {
+    html += '<div class="section">';
+    html += '<h3>Type</h3>';
+    html += `<p><span class="type-link" data-type="${esc(item.type)}">${esc(item.type)}</span></p>`;
+    html += '</div>';
+  }
+
+  // Restriction info (simple types)
+  if (item.restriction) {
+    const r = item.restriction;
+    if (r.base) {
+      html += '<div class="section">';
+      html += '<h3>Base Type</h3>';
+      html += `<p><span class="type-link" data-type="${esc(r.base)}">${esc(r.base)}</span></p>`;
+      html += '</div>';
+    }
+    if (r.enums.length > 0) {
+      html += '<div class="section">';
+      html += `<h3>Enumeration Values (${r.enums.length})</h3>`;
+      html += '<div class="enum-values">';
+      for (const e of r.enums) {
+        const title = e.doc ? ` title="${esc(e.doc)}"` : '';
+        html += `<span class="enum-val"${title}>${esc(e.value)}</span>`;
+      }
+      html += '</div>';
+      // If any have docs, show a table
+      if (r.enums.some(e => e.doc)) {
+        html += '<table class="props-table" style="margin-top:12px">';
+        html += '<tr><th>Value</th><th>Documentation</th></tr>';
+        for (const e of r.enums) {
+          html += `<tr><td class="name-col">${esc(e.value)}</td><td class="doc-col">${esc(e.doc)}</td></tr>`;
+        }
+        html += '</table>';
+      }
+      html += '</div>';
+    }
+    if (r.facets.length > 0) {
+      html += '<div class="section">';
+      html += '<h3>Restrictions</h3>';
+      html += '<div class="restriction-list">';
+      for (const f of r.facets) {
+        html += `<span class="restriction-item"><span class="label">${esc(f.name)}:</span>${esc(f.value)}</span>`;
+      }
+      html += '</div></div>';
+    }
+  }
+
+  // Attributes
+  if (item.attributes && item.attributes.length > 0) {
+    html += '<div class="section">';
+    html += `<h3>Attributes (${item.attributes.length})</h3>`;
+    html += '<table class="props-table">';
+    html += '<tr><th>Name</th><th>Type</th><th>Required</th><th>Documentation</th></tr>';
+    for (const attr of item.attributes) {
+      const req = attr.use === 'required';
+      html += '<tr>';
+      html += `<td class="name-col">${esc(attr.name)}</td>`;
+      html += `<td class="type-col"><span class="type-link" data-type="${esc(attr.type)}">${esc(attr.type || '-')}</span></td>`;
+      html += `<td class="req-col"><span class="${req ? 'req-yes' : 'req-no'}">${req ? 'required' : attr.use}</span></td>`;
+      let docStr = attr.doc;
+      if (attr.default) docStr += (docStr ? ' ' : '') + `Default: ${attr.default}`;
+      if (attr.fixed) docStr += (docStr ? ' ' : '') + `Fixed: ${attr.fixed}`;
+      html += `<td class="doc-col">${esc(docStr)}</td>`;
+      html += '</tr>';
+    }
+    html += '</table></div>';
+  }
+
+  // Child elements
+  if (item.children && item.children.length > 0) {
+    html += '<div class="section">';
+    html += `<h3>Child Elements (${item.children.length})</h3>`;
+    html += '<table class="props-table">';
+    html += '<tr><th>Name</th><th>Type</th><th>Occurs</th><th>Documentation</th></tr>';
+    for (const child of item.children) {
+      html += '<tr>';
+      html += `<td class="name-col">${child.choice ? '<span style="color:var(--text-dim);font-size:10px">choice </span>' : ''}`;
+      if (child.isRef || child.inlineTypeId) {
+        html += `<span class="type-link" data-nav="${esc(child.name)}">${esc(child.name)}</span>`;
+      } else {
+        html += esc(child.name);
+      }
+      html += '</td>';
+      html += `<td class="type-col"><span class="type-link" data-type="${esc(child.type)}">${esc(child.type || '-')}</span></td>`;
+      html += `<td class="req-col" style="font-family:monospace;font-size:12px">${esc(child.occ || '[1..1]')}</td>`;
+      html += `<td class="doc-col">${esc(child.doc)}</td>`;
+      html += '</tr>';
+    }
+    html += '</table></div>';
+  }
+
+  content.innerHTML = html;
+
+  // Type link clicks
+  content.querySelectorAll('.type-link').forEach(link => {
+    link.addEventListener('click', () => {
+      const typeName = link.dataset.type || link.dataset.nav || '';
+      if (!typeName) return;
+      const target = schema.items.find(i => i.name === typeName);
+      if (target) {
+        selectedId = target.id;
+        expandedNodes.add(target.id);
+        renderTree();
+        renderDetail(target.id);
+        updatePrompt();
+      }
+    });
+  });
+}
+
+// ── Prompt ──
+
+function updatePrompt() {
+  const item = schema.items.find(i => i.id === selectedId);
+  if (!item) return;
+
+  let parts = [`Viewing XSD ${item.kind} "${item.name}"`];
+  if (item.doc) parts.push(`which is documented as: "${item.doc.substring(0, 120)}${item.doc.length > 120 ? '...' : ''}"`);
+  if (item.children?.length) parts.push(`with ${item.children.length} child elements`);
+  if (item.attributes?.length) parts.push(`and ${item.attributes.length} attributes`);
+  if (item.restriction?.enums?.length) parts.push(`with ${item.restriction.enums.length} enumeration values`);
+  if (item.base) parts.push(`extending ${item.base}`);
+
+  document.getElementById('promptText').textContent = parts.join('. ') + '.';
+}
+
+// ── Stats ──
+
+function updateStats() {
+  const items = schema.items;
+  const elements = items.filter(i => i.kind === 'element').length;
+  const complexTypes = items.filter(i => i.kind === 'complexType').length;
+  const simpleTypes = items.filter(i => i.kind === 'simpleType').length;
+  const groups = items.filter(i => i.kind === 'group' || i.kind === 'attributeGroup').length;
+
+  document.getElementById('stats').innerHTML = [
+    `<span><span class="stat-val">${elements}</span> elements</span>`,
+    `<span><span class="stat-val">${complexTypes}</span> complex types</span>`,
+    `<span><span class="stat-val">${simpleTypes}</span> simple types</span>`,
+    groups > 0 ? `<span><span class="stat-val">${groups}</span> groups</span>` : '',
+  ].filter(Boolean).join('');
+}
+
+// ── Helpers ──
+
+function esc(str) {
+  if (!str) return '';
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ── Init ──
+
+function loadSchema(text, filename) {
+  const parser = new DOMParser();
+  const xmlDoc = parser.parseFromString(text, 'application/xml');
+
+  const parseError = xmlDoc.querySelector('parsererror');
+  if (parseError) {
+    alert('Failed to parse XSD: ' + parseError.textContent.substring(0, 200));
+    return;
+  }
+
+  schema = parseXSD(xmlDoc);
+
+  document.getElementById('fileInfo').textContent = filename + (schema.targetNamespace ? ` (${schema.targetNamespace})` : '');
+  document.getElementById('uploadOverlay').classList.add('hidden');
+  document.getElementById('sidebar').classList.remove('hidden');
+  document.getElementById('detail').classList.remove('hidden');
+  document.getElementById('promptBar').classList.remove('hidden');
+
+  selectedId = null;
+  expandedNodes.clear();
+  searchQuery = '';
+  activeFilter = 'all';
+  document.getElementById('searchInput').value = '';
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.toggle('active', c.dataset.filter === 'all'));
+
+  updateStats();
+  renderTree();
+
+  document.getElementById('detailContent').classList.add('hidden');
+  document.getElementById('detailEmpty').style.display = '';
+}
+
+function resetToUpload() {
+  schema = null;
+  selectedId = null;
+  expandedNodes.clear();
+  document.getElementById('uploadOverlay').classList.remove('hidden');
+  document.getElementById('sidebar').classList.add('hidden');
+  document.getElementById('detail').classList.add('hidden');
+  document.getElementById('promptBar').classList.add('hidden');
+}
+
+// File input
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+
+dropZone.addEventListener('click', () => fileInput.click());
+
+fileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  file.text().then(text => loadSchema(text, file.name));
+});
+
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) file.text().then(text => loadSchema(text, file.name));
+});
+
+// Search
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  searchQuery = e.target.value;
+  renderTree();
+});
+
+// Filters
+document.getElementById('treeFilters').addEventListener('click', (e) => {
+  const chip = e.target.closest('.filter-chip');
+  if (!chip) return;
+  activeFilter = chip.dataset.filter;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.toggle('active', c.dataset.filter === activeFilter));
+  renderTree();
+});
+
+// Copy prompt
+document.getElementById('copyBtn').addEventListener('click', () => {
+  const text = document.getElementById('promptText').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = 'Copy Prompt'; }, 1500);
+  });
+});
+
+// New file
+document.getElementById('newFileBtn').addEventListener('click', resetToUpload);
+</script>
+</body>
+</html>
