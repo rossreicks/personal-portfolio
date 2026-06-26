@@ -12,6 +12,7 @@
 
 /* newly added block - start */
 .skills-image-div {
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;

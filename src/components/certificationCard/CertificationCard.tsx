@@ -1,7 +1,7 @@
 "use client";
-import React from "react";
+import Image from "next/image";
 import "./CertificationCard.css";
-import { Fade } from "react-reveal";
+import { Fade } from "@/components/Fade";
 
 const CertificationCard = ({ certificate }) => {
 	return (
@@ -18,10 +18,12 @@ const CertificationCard = ({ certificate }) => {
 							className="cert-header"
 							style={{ backgroundColor: certificate.color_code }}
 						>
-							<img
+							<Image
 								className="logo_img"
 								src={`/images/${certificate.logo_path}`}
 								alt={certificate.alt_name}
+								width={160}
+								height={100}
 							/>
 						</div>
 						<div className="content-details fadeIn-top">
@@ -31,9 +33,7 @@ const CertificationCard = ({ certificate }) => {
 				</div>
 				<div className="cert-body">
 					<h2 className="cert-body-title">{certificate.title}</h2>
-					<h3 className="cert-body-subtitle">
-						{certificate.subtitle}
-					</h3>
+					<h3 className="cert-body-subtitle">{certificate.subtitle}</h3>
 				</div>
 			</div>
 		</Fade>

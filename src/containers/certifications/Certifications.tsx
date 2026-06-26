@@ -1,9 +1,8 @@
 "use client";
-import React, { Component } from "react";
 import "./Certifications.css";
-import { Fade } from "react-reveal";
-import { certifications } from "../../portfolio";
+import { Fade } from "@/components/Fade";
 import CertificationCard from "../../components/certificationCard/CertificationCard";
+import { certifications } from "../../portfolio";
 
 export default function Certifications() {
 	return (
@@ -14,10 +13,7 @@ export default function Certifications() {
 					<div className="cert-text-div">
 						{certifications.certifications.map((cert) => {
 							return (
-								<CertificationCard
-									key={cert.alt_name}
-									certificate={cert}
-								/>
+								<CertificationCard key={cert.alt_name} certificate={cert} />
 							);
 						})}
 					</div>

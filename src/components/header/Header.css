@@ -39,7 +39,7 @@
 	line-height: normal;
 }
 .header .logo-name {
-	font-family: "Cedarville_Cursive";
+	font-family: var(--font-agustina), cursive;
 	font-weight: "400";
 	font-variant-ligatures: no-common-ligatures;
 	-webkit-font-variant-ligatures: no-common-ligatures;

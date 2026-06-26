@@ -1,20 +1,17 @@
-import React from "react";
 import "./page.module.css";
-import Header from "../components/header/Header";
-import Greeting from "../containers/greeting/Greeting";
-import Skills from "../containers/skills/Skills";
-import WorkExperience from "../containers/workExperience/WorkExperience";
-import Projects from "../containers/projects/Projects";
-import Certifications from "../containers/certifications/Certifications";
-import Profile from "../containers/profile/Profile";
-import Footer from "../components/footer/Footer";
-import Top from "../containers/topbutton/Top";
-import Family from "@/containers/family/Family";
-import Hobbies from "@/containers/achievements/Achievements";
-import Achievements from "@/containers/achievements/Achievements";
-import { Get_Github_User } from "@/queries/github-user";
 import { GraphQLClient } from "graphql-request";
-import { GetGithubUserQuery, getSdk } from "@/gql/client";
+import { type GetGithubUserQuery, getSdk } from "@/gql/client";
+import Footer from "../components/footer/Footer";
+import Header from "../components/header/Header";
+import Certifications from "../containers/certifications/Certifications";
+import Greeting from "../containers/greeting/Greeting";
+import Profile from "../containers/profile/Profile";
+import Projects from "../containers/projects/Projects";
+import Skills from "../containers/skills/Skills";
+import Top from "../containers/topbutton/Top";
+import WorkExperience from "../containers/workExperience/WorkExperience";
+
+export const dynamic = "force-dynamic";
 
 async function App() {
 	const data = await getData();
@@ -27,9 +24,7 @@ async function App() {
 			<WorkExperience />
 			<Projects
 				repos={data.user.pinnedItems.edges}
-				contributions={
-					data.user.contributionsCollection.contributionCalendar
-				}
+				contributions={data.user.contributionsCollection.contributionCalendar}
 			/>
 			{/* <Family />
 			<Achievements /> */}
@@ -43,15 +38,36 @@ async function App() {
 }
 
 async function getData() {
-	const client = new GraphQLClient("https://api.github.com/graphql", {
-		headers: {
-			Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-		},
-	});
+	if (!process.env.GITHUB_TOKEN) return emptyGithubData;
 
-	const sdk = getSdk(client);
+	try {
+		const client = new GraphQLClient("https://api.github.com/graphql", {
+			headers: {
+				Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+			},
+		});
 
-	return await sdk.GetGithubUser({ username: "rossreicks" });
+		const sdk = getSdk(client);
+
+		return await sdk.GetGithubUser({ username: "rossreicks" });
+	} catch (error) {
+		console.error("Failed to load GitHub data", error);
+		return emptyGithubData;
+	}
 }
+
+const emptyGithubData = {
+	user: {
+		name: "Ross Reicks",
+		bio: "Software Engineer",
+		isHireable: false,
+		avatarUrl: "https://github.com/rossreicks.png",
+		location: null,
+		pinnedItems: { totalCount: 0, edges: [] },
+		contributionsCollection: {
+			contributionCalendar: { totalContributions: 0, weeks: [] },
+		},
+	},
+} satisfies GetGithubUserQuery;
 
 export default App;

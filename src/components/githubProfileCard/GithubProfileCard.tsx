@@ -1,10 +1,9 @@
 ﻿"use client";
-import React from "react";
+import Image from "next/image";
 import "./GithubProfileCard.css";
-import SocialMedia from "../socialMedia/SocialMedia";
+import { Fade } from "@/components/Fade";
 import { contactInfo } from "../../portfolio";
-import emoji from "react-easy-emoji";
-import { Fade } from "react-reveal";
+import SocialMedia from "../socialMedia/SocialMedia";
 
 export default function GithubProfileCard({ prof }) {
 	if (!prof) return null;
@@ -16,11 +15,9 @@ export default function GithubProfileCard({ prof }) {
 				<div className="row">
 					<div className="main-content-profile">
 						<div className="blog-header">
-							<p className="subTitle blog-subtitle">
-								{contactInfo.subtitle}
-							</p>
+							<p className="subTitle blog-subtitle">{contactInfo.subtitle}</p>
 						</div>
-						<h2 className="bio-text">{emoji(String(prof.bio))}</h2>
+						<h2 className="bio-text">{String(prof.bio)}</h2>
 						{prof.location !== null && (
 							<div className="location-div">
 								<span className="desc-prof">
@@ -42,17 +39,18 @@ export default function GithubProfileCard({ prof }) {
 						)}
 						<div className="opp-div">
 							<span className="desc-prof">
-								Open for opportunities: If you got something
-								really cool
+								Open for opportunities: If you got something really cool
 							</span>
 						</div>
 						<SocialMedia />
 					</div>
 					<div className="image-content-profile">
-						<img
+						<Image
 							src={prof.avatarUrl}
 							alt={prof.name}
 							className="profile-image"
+							width={350}
+							height={350}
 						/>
 					</div>
 				</div>

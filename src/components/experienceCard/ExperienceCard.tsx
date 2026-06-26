@@ -1,14 +1,14 @@
-import React, { useState, useRef } from "react";
+import Image from "next/image";
 import "./ExperienceCard.css";
 
 export default function ExperienceCard({ cardInfo }) {
 	const GetDescBullets = ({ descBullets }) => {
 		return descBullets
-			? descBullets.map((item, i) => (
-					<li key={i} className="subTitle">
+			? descBullets.map((item) => (
+					<li key={item} className="subTitle">
 						{item}
 					</li>
-			  ))
+				))
 			: null;
 	};
 
@@ -20,16 +20,15 @@ export default function ExperienceCard({ cardInfo }) {
 			>
 				<div className="experience-blurred_div"></div>
 				<div className="experience-div-company">
-					<h5 className="experience-text-company">
-						{cardInfo.company}
-					</h5>
+					<h5 className="experience-text-company">{cardInfo.company}</h5>
 				</div>
 
-				<img
-					crossOrigin={"anonymous"}
+				<Image
 					className="experience-roundedimg"
 					src={cardInfo.companylogo}
 					alt={cardInfo.company}
+					width={128}
+					height={128}
 				/>
 			</div>
 			<div className="experience-text-details">

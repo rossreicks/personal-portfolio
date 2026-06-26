@@ -1,13 +1,11 @@
-﻿/* Change this file to get your personal Portfolio */
-
-import emoji from "react-easy-emoji";
+/* Change this file to get your personal Portfolio */
 
 // Your Summary And Greeting Section
 
 const greeting = {
 	username: "Ross Reicks",
 	title: "Hi all, I'm Ross",
-	subTitle: emoji("Software Engineer 👨‍💻 | Tech Enthusiast 📊 | Father 👨‍👧‍👦"),
+	subTitle: "Software Engineer 👨‍💻 | Tech Enthusiast 📊 | Father 👨‍👧‍👦",
 	resumeLink:
 		"https://drive.google.com/file/d/1BZZ3kohIRD656FHCderaEWorwqheA7n9/view?usp=sharing",
 };
@@ -26,18 +24,10 @@ const skillsSection = {
 	title: "What i do",
 	subTitle: "CREATING SOFTWARE SOLUTIONS TO SAVE YOU TIME AND MONEY.",
 	skills: [
-		emoji(
-			"⚡ Architecting and developing exceptionally scalable and efficient applications"
-		),
-		emoji(
-			"⚡ Creating supremely engaging Frontend / User Interfaces for your web and mobile applications"
-		),
-		emoji(
-			"⚡ Deploying highly available and secure applications to the cloud"
-		),
-		emoji(
-			"⚡ Transforming a product from idea to production using the latest technologies"
-		),
+		"⚡ Architecting and developing exceptionally scalable and efficient applications",
+		"⚡ Creating supremely engaging Frontend / User Interfaces for your web and mobile applications",
+		"⚡ Deploying highly available and secure applications to the cloud",
+		"⚡ Transforming a product from idea to production using the latest technologies",
 	],
 
 	softwareSkills: [
@@ -137,18 +127,18 @@ const certifications = {
 };
 
 const contactInfo = {
-	title: emoji("Contact Me ☎️"),
+	title: "Contact Me ☎️",
 	subtitle:
 		"Discuss a project or just want to say hi? My Inbox is open for all.",
 	email_address: "rreicks13@gmail.com",
 };
 
 export {
-	greeting,
-	socialMediaLinks,
-	skillsSection,
-	workExperiences,
-	openSource,
-	contactInfo,
 	certifications,
+	contactInfo,
+	greeting,
+	openSource,
+	skillsSection,
+	socialMediaLinks,
+	workExperiences,
 };

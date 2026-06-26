@@ -1,9 +1,8 @@
 "use client";
-import React from "react";
 import "./WorkExperience.css";
+import { Fade } from "@/components/Fade";
 import ExperienceCard from "../../components/experienceCard/ExperienceCard";
 import { workExperiences } from "../../portfolio";
-import { Fade } from "react-reveal";
 
 export default function WorkExperience() {
 	if (workExperiences.viewExperiences) {

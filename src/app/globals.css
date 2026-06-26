@@ -1,19 +1,5 @@
 @import url("https://cdn.jsdelivr.net/gh/FortAwesome/Font-Awesome@5.13.0/css/all.min.css");
 
-@font-face {
-	font-family: "Agustina Regular";
-	font-style: normal;
-	font-weight: normal;
-	src: local("Agustina Regular"),
-		url("../assets/fonts/Agustina.woff") format("woff");
-	font-display: swap;
-}
-@font-face {
-	font-family: "Montserrat";
-	src: local("Montserrat"),
-		url("../assets/fonts/Montserrat-Regular.ttf") format("woff");
-	font-display: swap;
-}
 code {
 	font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
 		monospace;
@@ -24,7 +10,7 @@ body {
 }
 body {
 	margin: 0;
-	font: 19px / 23px Montserrat, "Montserrat", sans-serif;
+	font: 19px / 23px var(--font-montserrat), sans-serif;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 }

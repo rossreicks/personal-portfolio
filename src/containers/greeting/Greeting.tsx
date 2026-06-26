@@ -1,11 +1,10 @@
 ﻿"use client";
-import React from "react";
+import Image from "next/image";
 import "./Greeting.css";
-import SocialMedia from "../../components/socialMedia/SocialMedia";
+import { Fade } from "@/components/Fade";
 import Button from "../../components/button/Button";
+import SocialMedia from "../../components/socialMedia/SocialMedia";
 import { greeting } from "../../portfolio";
-import { Fade } from "react-reveal";
-import emoji from "react-easy-emoji";
 
 export default function Greeting() {
 	return (
@@ -16,14 +15,9 @@ export default function Greeting() {
 						<div>
 							<h1 className="greeting-text">
 								{" "}
-								{greeting.title}{" "}
-								<span className="wave-emoji">
-									{emoji("👋")}
-								</span>
+								{greeting.title} <span className="wave-emoji">👋</span>
 							</h1>
-							<p className="greeting-text-p subTitle">
-								{greeting.subTitle}
-							</p>
+							<p className="greeting-text-p subTitle">{greeting.subTitle}</p>
 							<SocialMedia />
 							<div className="button-greeting-div">
 								<Button text="Contact me" href="#contact" />
@@ -36,10 +30,13 @@ export default function Greeting() {
 						</div>
 					</div>
 					<div className="greeting-image-div">
-						<img
+						<Image
 							alt="man at desk"
-							src={"/images/manOnTable.svg"}
-						></img>
+							src="/images/manOnTable.svg"
+							width={600}
+							height={500}
+							priority
+						/>
 					</div>
 				</div>
 			</div>

@@ -1,21 +1,17 @@
 "use client";
-import React from "react";
 import "./GithubRepoCard.css";
-import { Fade } from "react-reveal";
+import { Fade } from "@/components/Fade";
 
 export default function GithubRepoCard({ repo }) {
-	function openRepoinNewTab(url) {
-		const win = window.open(url, "_blank");
-		win.focus();
-	}
-
 	return (
 		<Fade bottom duration={1000} distance="20px">
 			<div>
-				<div
+				<a
 					className="repo-card-div"
 					key={repo.node.id}
-					onClick={() => openRepoinNewTab(repo.node.url)}
+					href={repo.node.url}
+					target="_blank"
+					rel="noopener"
 				>
 					<div className="repo-name-div">
 						<svg
@@ -40,8 +36,7 @@ export default function GithubRepoCard({ repo }) {
 								<div
 									className="language-color"
 									style={{
-										backgroundColor:
-											repo.node.primaryLanguage.color,
+										backgroundColor: repo.node.primaryLanguage.color,
 									}}
 								></div>
 								<p>{repo.node.primaryLanguage.name}</p>
@@ -66,7 +61,7 @@ export default function GithubRepoCard({ repo }) {
 							<p>{repo.node.diskUsage} KB</p>
 						</div>
 					</div>
-				</div>
+				</a>
 			</div>
 		</Fade>
 	);

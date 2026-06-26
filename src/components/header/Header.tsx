@@ -1,5 +1,4 @@
 "use client";
-import React from "react";
 import "./Header.css";
 import Headroom from "react-headroom";
 import { greeting, workExperiences } from "../../portfolio";
@@ -9,7 +8,7 @@ function Header() {
 	return (
 		<Headroom>
 			<header className="header">
-				<a href="" className="logo">
+				<a href="/" className="logo">
 					<span className="grey-color"> &lt;</span>
 					<span className={"logo-name"}>{greeting.username}</span>
 					<span className="grey-color">/&gt;</span>
@@ -31,16 +30,7 @@ function Header() {
 						<a href="#opensource">Projects</a>
 					</li>
 					<li>
-						<a href="#family">Family</a>
-					</li>
-					<li>
-						<a href="#achievements">Achievements</a>
-					</li>
-					<li>
 						<a href="#certs">Certifications</a>
-					</li>
-					<li>
-						<a href="#hobbies">Hobbies</a>
 					</li>
 					<li>
 						<a href="#contact">Contact Me</a>
